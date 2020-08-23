@@ -11,7 +11,6 @@ use std::process;
 mod posts;
 use posts::Posts;
 
-
 /// Create a new blog post.
 pub fn new_post(posts: &Posts) -> Result<(), Box<dyn Error>> {
     let name = posts.new_post()?;
@@ -86,7 +85,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         .version("0.0.1")
         .about("Create notebook posts")
         .author("Jonathan M. Lange")
-        .arg(Arg::with_name("posts_dir").long("posts-dir").env("NOTEBOOK_POSTS_DIR").help("Path to directory containing notebook posts.").required(true))
+        .arg(
+            Arg::with_name("posts_dir")
+                .long("posts-dir")
+                .env("NOTEBOOK_POSTS_DIR")
+                .help("Path to directory containing notebook posts.")
+                .required(true),
+        )
         .subcommand(SubCommand::with_name("new"))
         .subcommand(SubCommand::with_name("edit"))
         .get_matches();

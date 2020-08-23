@@ -8,7 +8,6 @@ use std::process;
 use tera;
 use tera::{Context, Tera};
 
-
 const POST_FILENAME_FORMAT: &str = "%Y-%m-%d-%H:%M";
 const POST_SLUG_FORMAT: &str = "%Y-%m-%d-%H-%M";
 
@@ -65,7 +64,6 @@ impl Posts {
     }
 }
 
-
 fn render_new_post(now: &DateTime<Utc>) -> tera::Result<String> {
     let mut context = Context::new();
     context.insert("title", "Title goes here");
@@ -74,7 +72,6 @@ fn render_new_post(now: &DateTime<Utc>) -> tera::Result<String> {
     context.insert("slug", &slug);
     TEMPLATES.render("post.md", &context)
 }
-
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
