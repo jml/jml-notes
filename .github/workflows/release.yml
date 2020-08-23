@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  push:
+    branches: ["master"]
+    tags:
+      - "*"
+
+jobs:
+  release:
+    name: Release (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Run cargo build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all-features
+
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --release --all-features
+
+      - name: action/upload-artifact@v2
+        with:
+          name: jml-notes-macos
+          path: target/release/jml-notes
