@@ -1,5 +1,7 @@
-use chrono::prelude::*;
-use clap::{App, SubCommand};
+#[macro_use]
+extern crate lazy_static;
+
+use clap::{App, Arg, SubCommand};
 use std::error::Error;
 use std::fs;
 use std::io;
@@ -9,21 +11,20 @@ use std::process;
 mod posts;
 use posts::Posts;
 
-
-const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
-const POSTS_DIR: &str = "/Users/jml/src/notebook/posts/"; // TODO: Parameterize POSTS_DIR.
-
-
 /// Create a new blog post.
-pub fn new_post() -> io::Result<()> {
-    let now = Utc::now();
-    let name = format!("{}", now.format(POST_DATE_FORMAT));
-    let posts = Posts::new(Path::new(POSTS_DIR).to_owned());
-    edit_and_commit_post(&posts, &name)
+pub fn new_post(posts: &Posts) -> Result<(), Box<dyn Error>> {
+    let name = posts.new_post()?;
+    let post_file = posts.get_post_filename(&name);
+    let changed = edit_file(&post_file)?;
+    if changed {
+        posts.commit_post(&post_file, &name)?;
+    } else {
+        fs::remove_file(&post_file)?;
+    }
+    Ok(())
 }
 
-pub fn edit_post() -> io::Result<()> {
-    let posts = Posts::new(Path::new(POSTS_DIR).to_owned());
+pub fn edit_post(posts: &Posts) -> io::Result<()> {
     let latest_file = posts.get_latest_file()?;
     // TODO: Return errors for not finding posts.
     // TODO: See if we can avoid nested match.
@@ -37,21 +38,15 @@ pub fn edit_post() -> io::Result<()> {
                 println!("Could not find post to edit.");
                 Ok(())
             }
-            Some(name) => edit_and_commit_post(&posts, name),
+            Some(name) => {
+                let changed = edit_file(&path)?;
+                if changed {
+                    posts.commit_post(&path, name)
+                } else {
+                    Ok(())
+                }
+            }
         },
-    }
-}
-
-/// Edit the blog post with the given name inside the posts directory.
-///
-/// If it changes, ensure the change is committed.
-fn edit_and_commit_post(posts: &Posts, name: &str) -> io::Result<()> {
-    let post_file = posts.get_post_filename(name);
-    let changed = edit_file(&post_file)?;
-    if changed {
-        posts.commit_post(&post_file, name)
-    } else {
-        Ok(())
     }
 }
 
@@ -90,12 +85,21 @@ fn main() -> Result<(), Box<dyn Error>> {
         .version("0.0.1")
         .about("Create notebook posts")
         .author("Jonathan M. Lange")
+        .arg(
+            Arg::with_name("posts_dir")
+                .long("posts-dir")
+                .env("NOTEBOOK_POSTS_DIR")
+                .help("Path to directory containing notebook posts.")
+                .required(true),
+        )
         .subcommand(SubCommand::with_name("new"))
         .subcommand(SubCommand::with_name("edit"))
         .get_matches();
+    let posts_dir = matches.value_of("posts_dir").unwrap();
+    let posts = Posts::new(Path::new(posts_dir).to_owned());
     match matches.subcommand_name() {
-        Some("new") => new_post()?,
-        Some("edit") => edit_post()?,
+        Some("new") => new_post(&posts)?,
+        Some("edit") => edit_post(&posts)?,
         _ => {
             eprintln!("No such subcommand");
             process::exit(1);
