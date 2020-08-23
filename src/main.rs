@@ -19,6 +19,8 @@ pub fn new_post(posts: &Posts) -> Result<(), Box<dyn Error>> {
     let changed = edit_file(&post_file)?;
     if changed {
         posts.commit_post(&post_file, &name)?;
+    } else {
+        fs::remove_file(&post_file)?;
     }
     Ok(())
 }
