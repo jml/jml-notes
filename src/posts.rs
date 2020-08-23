@@ -5,7 +5,6 @@ use std::io;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 use std::process;
-use tera;
 use tera::{Context, Tera};
 
 const POST_FILENAME_FORMAT: &str = "%Y-%m-%d-%H:%M";
@@ -75,12 +74,11 @@ fn render_new_post(now: &DateTime<Utc>) -> tera::Result<String> {
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        let t = match Tera::new("templates/*") {
+        match Tera::new("templates/*") {
             Ok(t) => t,
             Err(e) => {
                 panic!("Parsing error(s): {}", e);
             }
-        };
-        t
+        }
     };
 }
