@@ -15,7 +15,11 @@ use posts::Posts;
 /// Create a new blog post.
 pub fn new_post(posts: &Posts) -> Result<(), Box<dyn Error>> {
     let name = posts.new_post()?;
-    edit_and_commit_post(&posts, &name)?;
+    let post_file = posts.get_post_filename(&name);
+    let changed = edit_file(&post_file)?;
+    if changed {
+        posts.commit_post(&post_file, &name)?;
+    }
     Ok(())
 }
 
@@ -33,21 +37,15 @@ pub fn edit_post(posts: &Posts) -> io::Result<()> {
                 println!("Could not find post to edit.");
                 Ok(())
             }
-            Some(name) => edit_and_commit_post(&posts, name),
+            Some(name) => {
+                let changed = edit_file(&path)?;
+                if changed {
+                    posts.commit_post(&path, name)
+                } else {
+                    Ok(())
+                }
+            }
         },
-    }
-}
-
-/// Edit the blog post with the given name inside the posts directory.
-///
-/// If it changes, ensure the change is committed.
-fn edit_and_commit_post(posts: &Posts, name: &str) -> io::Result<()> {
-    let post_file = posts.get_post_filename(name);
-    let changed = edit_file(&post_file)?;
-    if changed {
-        posts.commit_post(&post_file, name)
-    } else {
-        Ok(())
     }
 }
 
