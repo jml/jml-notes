@@ -1,4 +1,6 @@
-use chrono::prelude::*;
+#[macro_use]
+extern crate lazy_static;
+
 use clap::{App, Arg, SubCommand};
 use std::error::Error;
 use std::fs;
@@ -10,14 +12,11 @@ mod posts;
 use posts::Posts;
 
 
-const POST_DATE_FORMAT: &str = "%Y-%m-%d-%H:%M";
-
-
 /// Create a new blog post.
-pub fn new_post(posts: &Posts) -> io::Result<()> {
-    let now = Utc::now();
-    let name = format!("{}", now.format(POST_DATE_FORMAT));
-    edit_and_commit_post(&posts, &name)
+pub fn new_post(posts: &Posts) -> Result<(), Box<dyn Error>> {
+    let name = posts.new_post()?;
+    edit_and_commit_post(&posts, &name)?;
+    Ok(())
 }
 
 pub fn edit_post(posts: &Posts) -> io::Result<()> {
