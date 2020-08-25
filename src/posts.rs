@@ -74,11 +74,14 @@ fn render_new_post(now: &DateTime<Utc>) -> tera::Result<String> {
 
 lazy_static! {
     pub static ref TEMPLATES: Tera = {
-        match Tera::new("templates/*") {
+        let mut t = match Tera::new("templates/*.html") {
             Ok(t) => t,
             Err(e) => {
                 panic!("Parsing error(s): {}", e);
             }
-        }
+        };
+        let post = include_str!("../templates/post.md");
+        t.add_raw_template("post.md", post).unwrap();
+        t
     };
 }
