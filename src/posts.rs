@@ -35,7 +35,10 @@ impl Posts {
         let mut paths = vec![];
         for entry in entries {
             let entry = entry?;
-            paths.push(entry.path())
+            let path = entry.path();
+            if !path.ends_with("_index.md") {
+                paths.push(entry.path())
+            }
         }
         Ok(paths.into_iter().max())
     }
